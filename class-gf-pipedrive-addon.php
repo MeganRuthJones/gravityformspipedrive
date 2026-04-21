@@ -177,14 +177,16 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		}
 
 		$object    = rgars( $feed, 'meta/pipedrive_object' );
-		$field_map = rgars( $feed, 'meta/field_map' );
+		$field_map = $this->get_field_map_fields( $feed, 'field_map' );
+
+		$this->log_debug( __METHOD__ . '(): Object: ' . $object . '. Field map: ' . wp_json_encode( $field_map ) );
 
 		$person_id = null;
 		$org_id    = null;
 
 		// --- ORGANIZATION: find-or-create when creating an org or deal ---
 		if ( $object === 'organization' || $object === 'deal' ) {
-			$org_name = $this->get_mapped_value( $field_map, 'organization', $entry );
+			$org_name = $this->get_mapped_value( $field_map, 'organization', $entry, $form );
 			if ( ! empty( $org_name ) ) {
 				$org_id = $this->upsert_organization( $org_name, $api_key );
 			}
@@ -192,21 +194,23 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 
 		// --- PERSON: find-or-create when creating a person or deal ---
 		if ( $object === 'person' || $object === 'deal' ) {
-			$person_name  = $this->get_mapped_value( $field_map, 'person_name', $entry );
-			$person_email = $this->get_mapped_value( $field_map, 'person_email', $entry );
-			$person_phone = $this->get_mapped_value( $field_map, 'person_phone', $entry );
+			$person_name  = $this->get_mapped_value( $field_map, 'person_name', $entry, $form );
+			$person_email = $this->get_mapped_value( $field_map, 'person_email', $entry, $form );
+			$person_phone = $this->get_mapped_value( $field_map, 'person_phone', $entry, $form );
+
+			$this->log_debug( sprintf( '%s(): Resolved person values — name: "%s", email: "%s", phone: "%s"', __METHOD__, $person_name, $person_email, $person_phone ) );
 
 			if ( ! empty( $person_name ) || ! empty( $person_email ) ) {
 				$person_id = $this->upsert_person( $person_name, $person_email, $person_phone, $org_id, $api_key );
 			} else {
-				$this->log_debug( __METHOD__ . '(): Skipping person — no name or email mapped.' );
+				$this->log_debug( __METHOD__ . '(): Skipping person — name and email both resolved to empty strings.' );
 			}
 		}
 
 		// --- DEAL: always create new ---
 		if ( $object === 'deal' ) {
-			$deal_title = $this->get_mapped_value( $field_map, 'deal_title', $entry );
-			$deal_value = $this->get_mapped_value( $field_map, 'deal_value', $entry );
+			$deal_title = $this->get_mapped_value( $field_map, 'deal_title', $entry, $form );
+			$deal_value = $this->get_mapped_value( $field_map, 'deal_value', $entry, $form );
 
 			if ( empty( $deal_title ) ) {
 				$this->log_error( __METHOD__ . '(): Deal title is empty; skipping deal creation.' );
@@ -235,18 +239,22 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 	/**
 	 * Resolve a mapped form field to its entry value.
 	 *
-	 * @param array  $field_map The feed's field_map meta.
+	 * Uses the framework's get_field_value() which correctly handles composite
+	 * fields (Name, Address) and returns the concatenated value.
+	 *
+	 * @param array  $field_map The resolved field_map array (key => field_id).
 	 * @param string $key       The mapping key (e.g. 'person_email').
 	 * @param array  $entry     The form entry.
+	 * @param array  $form      The form object.
 	 *
 	 * @return string
 	 */
-	private function get_mapped_value( $field_map, $key, $entry ) {
+	private function get_mapped_value( $field_map, $key, $entry, $form ) {
 		$field_id = rgar( (array) $field_map, $key );
 		if ( empty( $field_id ) ) {
 			return '';
 		}
-		return (string) rgar( $entry, $field_id );
+		return (string) $this->get_field_value( $form, $entry, $field_id );
 	}
 
 	/**
