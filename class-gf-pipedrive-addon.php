@@ -99,7 +99,7 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 			array(
 				'title'       => esc_html__( 'Person Fields', 'gravityformspipedrive' ),
 				'description' => esc_html__( 'Map your form fields to Pipedrive Person fields. Person Name is required. If an Organization is mapped, the Person will be linked to it (and the Organization created in Pipedrive if it does not already exist). Existing Persons are matched by email address.', 'gravityformspipedrive' ),
-				'dependency'  => array( 'field' => 'pipedrive_object', 'values' => array( 'person' ) ),
+				'dependency'  => array( 'field' => 'pipedrive_object', 'values' => array( 'person' ), 'live' => true ),
 				'fields'      => array(
 					array(
 						'name'      => 'person_field_map',
@@ -135,7 +135,7 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 			array(
 				'title'       => esc_html__( 'Organization Fields', 'gravityformspipedrive' ),
 				'description' => esc_html__( 'Map your form fields to Pipedrive Organization fields. Organization Name is required. Existing Organizations are matched by exact name.', 'gravityformspipedrive' ),
-				'dependency'  => array( 'field' => 'pipedrive_object', 'values' => array( 'organization' ) ),
+				'dependency'  => array( 'field' => 'pipedrive_object', 'values' => array( 'organization' ), 'live' => true ),
 				'fields'      => array(
 					array(
 						'name'      => 'organization_field_map',
@@ -147,6 +147,11 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 								'label'    => esc_html__( 'Organization Name', 'gravityformspipedrive' ),
 								'required' => true,
 							),
+							array(
+								'name'     => 'organization_address',
+								'label'    => esc_html__( 'Organization Address', 'gravityformspipedrive' ),
+								'required' => false,
+							),
 						),
 					),
 				),
@@ -156,7 +161,7 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 			array(
 				'title'       => esc_html__( 'Deal Fields', 'gravityformspipedrive' ),
 				'description' => esc_html__( 'Map your form fields to Pipedrive Deal fields. Deal Title is required. Deals must be linked to a Person or an Organization (or both) — map at least one Person or Organization field below.', 'gravityformspipedrive' ),
-				'dependency'  => array( 'field' => 'pipedrive_object', 'values' => array( 'deal' ) ),
+				'dependency'  => array( 'field' => 'pipedrive_object', 'values' => array( 'deal' ), 'live' => true ),
 				'fields'      => array(
 					array(
 						'name'      => 'deal_field_map',
@@ -167,21 +172,9 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 								'name'     => 'deal_title',
 								'label'    => esc_html__( 'Deal Title', 'gravityformspipedrive' ),
 								'required' => true,
-							),
-							array(
-								'name'     => 'deal_value',
-								'label'    => esc_html__( 'Deal Value (number)', 'gravityformspipedrive' ),
-								'required' => false,
+								'tooltip'  => esc_html__( 'The name of the deal as it will appear in Pipedrive. This is the headline shown on the deal card in your sales pipeline, so make it something your sales team can recognise at a glance — for example, the person\'s name, the service they are interested in, or the project title.', 'gravityformspipedrive' ),
 							),
 						),
-					),
-					array(
-						'name'          => 'deal_currency',
-						'label'         => esc_html__( 'Deal Currency', 'gravityformspipedrive' ),
-						'type'          => 'select',
-						'default_value' => '',
-						'tooltip'       => esc_html__( 'The currency of the deal. Leave as "Account default" to use whatever your Pipedrive account is configured with.', 'gravityformspipedrive' ),
-						'choices'       => $this->get_currency_choices(),
 					),
 					array(
 						'name' => 'deal_link_header',
@@ -275,30 +268,6 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		return ucfirst( $object );
 	}
 
-	/**
-	 * Currency choices for the Deal currency dropdown.
-	 */
-	private function get_currency_choices() {
-		return array(
-			array( 'label' => esc_html__( 'Account default', 'gravityformspipedrive' ), 'value' => '' ),
-			array( 'label' => 'USD — US Dollar', 'value' => 'USD' ),
-			array( 'label' => 'EUR — Euro', 'value' => 'EUR' ),
-			array( 'label' => 'GBP — British Pound', 'value' => 'GBP' ),
-			array( 'label' => 'CAD — Canadian Dollar', 'value' => 'CAD' ),
-			array( 'label' => 'AUD — Australian Dollar', 'value' => 'AUD' ),
-			array( 'label' => 'NZD — New Zealand Dollar', 'value' => 'NZD' ),
-			array( 'label' => 'JPY — Japanese Yen', 'value' => 'JPY' ),
-			array( 'label' => 'CHF — Swiss Franc', 'value' => 'CHF' ),
-			array( 'label' => 'SEK — Swedish Krona', 'value' => 'SEK' ),
-			array( 'label' => 'NOK — Norwegian Krone', 'value' => 'NOK' ),
-			array( 'label' => 'DKK — Danish Krone', 'value' => 'DKK' ),
-			array( 'label' => 'INR — Indian Rupee', 'value' => 'INR' ),
-			array( 'label' => 'BRL — Brazilian Real', 'value' => 'BRL' ),
-			array( 'label' => 'MXN — Mexican Peso', 'value' => 'MXN' ),
-			array( 'label' => 'ZAR — South African Rand', 'value' => 'ZAR' ),
-		);
-	}
-
 	// ---------------------------------------------------------------------
 	// Feed processing
 	// ---------------------------------------------------------------------
@@ -366,15 +335,16 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 
 		$field_map = $this->get_field_map_fields( $feed, 'organization_field_map' );
 		$name      = $this->get_mapped_value( $field_map, 'organization_name', $entry, $form );
+		$address   = $this->get_mapped_value( $field_map, 'organization_address', $entry, $form );
 
-		$this->log_debug( sprintf( '%s(): Organization values — name: "%s"', __METHOD__, $name ) );
+		$this->log_debug( sprintf( '%s(): Organization values — name: "%s", address: "%s"', __METHOD__, $name, $address ) );
 
 		if ( empty( $name ) ) {
 			$this->log_error( __METHOD__ . '(): Organization Name resolved empty; cannot create Organization.' );
 			return $entry;
 		}
 
-		$this->upsert_organization( $name, $api_key );
+		$this->upsert_organization( $name, $api_key, $address );
 
 		return $entry;
 	}
@@ -390,9 +360,7 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		$deal_map = $this->get_field_map_fields( $feed, 'deal_field_map' );
 		$link_map = $this->get_field_map_fields( $feed, 'deal_link_field_map' );
 
-		$title    = $this->get_mapped_value( $deal_map, 'deal_title', $entry, $form );
-		$value    = $this->get_mapped_value( $deal_map, 'deal_value', $entry, $form );
-		$currency = rgars( $feed, 'meta/deal_currency' );
+		$title = $this->get_mapped_value( $deal_map, 'deal_title', $entry, $form );
 
 		$person_name  = $this->get_mapped_value( $link_map, 'person_name', $entry, $form );
 		$person_email = $this->get_mapped_value( $link_map, 'person_email', $entry, $form );
@@ -400,11 +368,9 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		$org_name     = $this->get_mapped_value( $link_map, 'organization_name', $entry, $form );
 
 		$this->log_debug( sprintf(
-			'%s(): Deal values — title: "%s", value: "%s", currency: "%s". Links — person_name: "%s", person_email: "%s", org_name: "%s"',
+			'%s(): Deal values — title: "%s". Links — person_name: "%s", person_email: "%s", org_name: "%s"',
 			__METHOD__,
 			$title,
-			$value,
-			$currency,
 			$person_name,
 			$person_email,
 			$org_name
@@ -431,7 +397,7 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 			return $entry;
 		}
 
-		$this->create_deal( $title, $value, $currency, $person_id, $org_id, $api_key );
+		$this->create_deal( $title, $person_id, $org_id, $api_key );
 
 		return $entry;
 	}
@@ -496,8 +462,18 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 
 	/**
 	 * Find an organization by exact name, or create one. Returns the org ID.
+	 *
+	 * If an address is supplied and the organization already exists, the
+	 * existing record is updated with the address. If the organization does
+	 * not exist, it is created with both name and address.
+	 *
+	 * @param string      $name    Organization name (required).
+	 * @param string      $api_key Pipedrive API token.
+	 * @param string|null $address Optional address to set on the org.
+	 *
+	 * @return int|null Org ID on success, null on failure.
 	 */
-	private function upsert_organization( $name, $api_key ) {
+	private function upsert_organization( $name, $api_key, $address = '' ) {
 
 		$search_url = add_query_arg(
 			array(
@@ -513,11 +489,24 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		if ( is_array( $search ) && ! empty( $search['items'] ) ) {
 			$org_id = (int) $search['items'][0]['item']['id'];
 			$this->log_debug( __METHOD__ . '(): Matched existing organization ID ' . $org_id );
+
+			// If an address was supplied, update the existing org.
+			if ( ! empty( $address ) ) {
+				$update_url = add_query_arg( array( 'api_token' => $api_key ), $this->api_base() . 'organizations/' . $org_id );
+				$this->pipedrive_request( 'PUT', $update_url, array( 'address' => $address ) );
+				$this->log_debug( __METHOD__ . '(): Updated organization ID ' . $org_id . ' with new address.' );
+			}
+
 			return $org_id;
 		}
 
+		$create_body = array( 'name' => $name );
+		if ( ! empty( $address ) ) {
+			$create_body['address'] = $address;
+		}
+
 		$create_url = add_query_arg( array( 'api_token' => $api_key ), $this->api_base() . 'organizations' );
-		$created    = $this->pipedrive_request( 'POST', $create_url, array( 'name' => $name ) );
+		$created    = $this->pipedrive_request( 'POST', $create_url, $create_body );
 
 		if ( ! empty( $created['id'] ) ) {
 			$this->log_debug( __METHOD__ . '(): Created new organization ID ' . $created['id'] );
@@ -586,15 +575,9 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 	/**
 	 * Create a new deal.
 	 */
-	private function create_deal( $title, $value, $currency, $person_id, $org_id, $api_key ) {
+	private function create_deal( $title, $person_id, $org_id, $api_key ) {
 
 		$body = array( 'title' => $title );
-		if ( $value !== '' && $value !== null ) {
-			$body['value'] = $value;
-		}
-		if ( ! empty( $currency ) ) {
-			$body['currency'] = $currency;
-		}
 		if ( ! empty( $person_id ) ) {
 			$body['person_id'] = $person_id;
 		}
