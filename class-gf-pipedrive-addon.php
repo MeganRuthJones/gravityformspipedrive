@@ -18,9 +18,6 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 
 	private static $_instance = null;
 
-	/**
-	 * Get an instance of this class.
-	 */
 	public static function get_instance() {
 		if ( self::$_instance === null ) {
 			self::$_instance = new self();
@@ -40,7 +37,6 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		);
 
 		$description = sprintf(
-			/* translators: %s: link to Pipedrive API settings */
 			__( 'Enter your Pipedrive API token to connect your account. You can %s (log in to Pipedrive first, then click on the Personal → API tab). Each token is tied to a specific Pipedrive user — whoever owns the token will appear as the owner of records created by this add-on.', 'gravityformspipedrive' ),
 			$api_link
 		);
@@ -68,7 +64,6 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 
 	public function feed_settings_fields() {
 		return array(
-			// -- Section 1: Feed name + object -------------------------------
 			array(
 				'title'  => esc_html__( 'Pipedrive Feed Settings', 'gravityformspipedrive' ),
 				'fields' => array(
@@ -90,78 +85,45 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 						),
 						'required'      => true,
 						'default_value' => 'person',
-						'tooltip'       => esc_html__( 'Choose what kind of record this feed creates in Pipedrive. Each feed creates one type of record. To create linked records (e.g. a Person and a Deal), create multiple feeds on the same form.', 'gravityformspipedrive' ),
+						'tooltip'       => esc_html__( 'Select the type of record this feed creates in Pipedrive. Fill in the matching section below; leave the others empty.', 'gravityformspipedrive' ),
 					),
 				),
 			),
-
-			// -- Section 2: Person field mapping (only when object is Person) -
 			array(
 				'title'       => esc_html__( 'Person Fields', 'gravityformspipedrive' ),
-				'description' => esc_html__( 'Map your form fields to Pipedrive Person fields. Person Name is required. If an Organization is mapped, the Person will be linked to it (and the Organization created in Pipedrive if it does not already exist). Existing Persons are matched by email address.', 'gravityformspipedrive' ),
-				'dependency'  => array( 'field' => 'pipedrive_object', 'values' => array( 'person' ), 'live' => true ),
+				'description' => esc_html__( 'Person Name is required. Mapped Organization names are created if they don\'t exist. Existing Persons are matched by email.', 'gravityformspipedrive' ),
 				'fields'      => array(
 					array(
 						'name'      => 'person_field_map',
 						'label'     => esc_html__( 'Map Person Fields', 'gravityformspipedrive' ),
 						'type'      => 'field_map',
 						'field_map' => array(
-							array(
-								'name'     => 'person_name',
-								'label'    => esc_html__( 'Person Name', 'gravityformspipedrive' ),
-								'required' => true,
-							),
-							array(
-								'name'     => 'person_email',
-								'label'    => esc_html__( 'Email', 'gravityformspipedrive' ),
-								'required' => false,
-							),
-							array(
-								'name'     => 'person_phone',
-								'label'    => esc_html__( 'Phone', 'gravityformspipedrive' ),
-								'required' => false,
-							),
-							array(
-								'name'     => 'person_organization',
-								'label'    => esc_html__( 'Organization (will be linked)', 'gravityformspipedrive' ),
-								'required' => false,
-							),
+							array( 'name' => 'person_name',         'label' => esc_html__( 'Person Name', 'gravityformspipedrive' ),                  'required' => false ),
+							array( 'name' => 'person_email',        'label' => esc_html__( 'Email', 'gravityformspipedrive' ),                        'required' => false ),
+							array( 'name' => 'person_phone',        'label' => esc_html__( 'Phone', 'gravityformspipedrive' ),                        'required' => false ),
+							array( 'name' => 'person_organization', 'label' => esc_html__( 'Organization (will be linked)', 'gravityformspipedrive' ), 'required' => false ),
 						),
 					),
 				),
 			),
-
-			// -- Section 3: Organization field mapping (only when object is Org) -
 			array(
 				'title'       => esc_html__( 'Organization Fields', 'gravityformspipedrive' ),
-				'description' => esc_html__( 'Map your form fields to Pipedrive Organization fields. Organization Name is required. Existing Organizations are matched by exact name.', 'gravityformspipedrive' ),
-				'dependency'  => array( 'field' => 'pipedrive_object', 'values' => array( 'organization' ), 'live' => true ),
+				'description' => esc_html__( 'Organization Name is required. Existing Organizations are matched by name.', 'gravityformspipedrive' ),
 				'fields'      => array(
 					array(
 						'name'      => 'organization_field_map',
 						'label'     => esc_html__( 'Map Organization Fields', 'gravityformspipedrive' ),
 						'type'      => 'field_map',
 						'field_map' => array(
-							array(
-								'name'     => 'organization_name',
-								'label'    => esc_html__( 'Organization Name', 'gravityformspipedrive' ),
-								'required' => true,
-							),
-							array(
-								'name'     => 'organization_address',
-								'label'    => esc_html__( 'Organization Address', 'gravityformspipedrive' ),
-								'required' => false,
-							),
+							array( 'name' => 'organization_name',    'label' => esc_html__( 'Organization Name', 'gravityformspipedrive' ),    'required' => false ),
+							array( 'name' => 'organization_address', 'label' => esc_html__( 'Organization Address', 'gravityformspipedrive' ), 'required' => false ),
 						),
 					),
 				),
 			),
-
-			// -- Section 4: Deal field mapping + linking (only when object is Deal) -
 			array(
 				'title'       => esc_html__( 'Deal Fields', 'gravityformspipedrive' ),
-				'description' => esc_html__( 'Map your form fields to Pipedrive Deal fields. Deal Title is required. Deals must be linked to a Person or an Organization (or both) — map at least one Person or Organization field below.', 'gravityformspipedrive' ),
-				'dependency'  => array( 'field' => 'pipedrive_object', 'values' => array( 'deal' ), 'live' => true ),
+				'description' => esc_html__( 'Deal Title is required. Each Deal must link to a Person or Organization — map at least one below. If the Email or Organization Name matches an existing record in Pipedrive, the Deal links to it. Otherwise, a new record is created.', 'gravityformspipedrive' ),
 				'fields'      => array(
 					array(
 						'name'      => 'deal_field_map',
@@ -171,48 +133,17 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 							array(
 								'name'     => 'deal_title',
 								'label'    => esc_html__( 'Deal Title', 'gravityformspipedrive' ),
-								'required' => true,
+								'required' => false,
 								'tooltip'  => esc_html__( 'The name of the deal as it will appear in Pipedrive. This is the headline shown on the deal card in your sales pipeline, so make it something your sales team can recognise at a glance — for example, the person\'s name, the service they are interested in, or the project title.', 'gravityformspipedrive' ),
 							),
-						),
-					),
-					array(
-						'name' => 'deal_link_header',
-						'label' => esc_html__( 'Link this Deal to a Person or Organization', 'gravityformspipedrive' ),
-						'type' => 'html',
-						'html' => '<p style="margin: 0 0 1em 0;">' . esc_html__( 'Map at least one Person or Organization field below. If the mapped email or organization name matches an existing record in Pipedrive, it will be linked. Otherwise, a new record will be created.', 'gravityformspipedrive' ) . '</p>',
-					),
-					array(
-						'name'      => 'deal_link_field_map',
-						'label'     => esc_html__( 'Person / Organization Link', 'gravityformspipedrive' ),
-						'type'      => 'field_map',
-						'field_map' => array(
-							array(
-								'name'     => 'person_name',
-								'label'    => esc_html__( 'Person Name', 'gravityformspipedrive' ),
-								'required' => false,
-							),
-							array(
-								'name'     => 'person_email',
-								'label'    => esc_html__( 'Person Email (used to match existing contacts)', 'gravityformspipedrive' ),
-								'required' => false,
-							),
-							array(
-								'name'     => 'person_phone',
-								'label'    => esc_html__( 'Person Phone', 'gravityformspipedrive' ),
-								'required' => false,
-							),
-							array(
-								'name'     => 'organization_name',
-								'label'    => esc_html__( 'Organization Name', 'gravityformspipedrive' ),
-								'required' => false,
-							),
+							array( 'name' => 'person_name',       'label' => esc_html__( 'Person Name', 'gravityformspipedrive' ),       'required' => false ),
+							array( 'name' => 'person_email',      'label' => esc_html__( 'Person Email', 'gravityformspipedrive' ),      'required' => false ),
+							array( 'name' => 'person_phone',      'label' => esc_html__( 'Person Phone', 'gravityformspipedrive' ),      'required' => false ),
+							array( 'name' => 'organization_name', 'label' => esc_html__( 'Organization Name', 'gravityformspipedrive' ), 'required' => false ),
 						),
 					),
 				),
 			),
-
-			// -- Section 5: Conditional logic --------------------------------
 			array(
 				'title'  => esc_html__( 'Feed Conditional Logic', 'gravityformspipedrive' ),
 				'fields' => array(
@@ -227,24 +158,38 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		);
 	}
 
-	/**
-	 * Validate feed settings before saving.
-	 *
-	 * Enforces the rule that Deal feeds must map at least one Person or
-	 * Organization link field.
-	 */
 	public function save_feed_settings( $feed_id, $form_id, $settings ) {
 
-		if ( rgar( $settings, 'pipedrive_object' ) === 'deal' ) {
-			$link_map = rgar( $settings, 'deal_link_field_map', array() );
+		$object = rgar( $settings, 'pipedrive_object' );
+
+		if ( $object === 'person' ) {
+			$field_map = rgar( $settings, 'person_field_map', array() );
+			if ( empty( rgar( $field_map, 'person_name' ) ) ) {
+				GFCommon::add_error_message( esc_html__( 'Person feeds require Person Name to be mapped.', 'gravityformspipedrive' ) );
+			}
+		}
+
+		if ( $object === 'organization' ) {
+			$field_map = rgar( $settings, 'organization_field_map', array() );
+			if ( empty( rgar( $field_map, 'organization_name' ) ) ) {
+				GFCommon::add_error_message( esc_html__( 'Organization feeds require Organization Name to be mapped.', 'gravityformspipedrive' ) );
+			}
+		}
+
+		if ( $object === 'deal' ) {
+			$field_map = rgar( $settings, 'deal_field_map', array() );
+
+			if ( empty( rgar( $field_map, 'deal_title' ) ) ) {
+				GFCommon::add_error_message( esc_html__( 'Deal feeds require Deal Title to be mapped.', 'gravityformspipedrive' ) );
+			}
+
 			$has_link = false;
 			foreach ( array( 'person_name', 'person_email', 'person_phone', 'organization_name' ) as $key ) {
-				if ( ! empty( rgar( $link_map, $key ) ) ) {
+				if ( ! empty( rgar( $field_map, $key ) ) ) {
 					$has_link = true;
 					break;
 				}
 			}
-
 			if ( ! $has_link ) {
 				GFCommon::add_error_message( esc_html__( 'Deal feeds must be linked to a Person or Organization. Please map at least one Person or Organization field before saving.', 'gravityformspipedrive' ) );
 			}
@@ -253,9 +198,6 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		return parent::save_feed_settings( $feed_id, $form_id, $settings );
 	}
 
-	/**
-	 * Columns shown on the feed list page.
-	 */
 	public function feed_list_columns() {
 		return array(
 			'feed_name'        => esc_html__( 'Name', 'gravityformspipedrive' ),
@@ -272,9 +214,6 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 	// Feed processing
 	// ---------------------------------------------------------------------
 
-	/**
-	 * Process a feed: dispatch to the per-object handler.
-	 */
 	public function process_feed( $feed, $entry, $form ) {
 
 		$api_key = $this->get_plugin_setting( 'pipedrive_api_key' );
@@ -285,6 +224,8 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 
 		$object = rgars( $feed, 'meta/pipedrive_object' );
 		$this->log_debug( __METHOD__ . '(): Processing feed as ' . $object );
+
+		$this->warn_on_unused_sections( $feed, $object );
 
 		switch ( $object ) {
 			case 'person':
@@ -299,9 +240,40 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		}
 	}
 
-	/**
-	 * Process a Person feed.
-	 */
+	private function warn_on_unused_sections( $feed, $object ) {
+
+		$unused = array();
+		$sections = array(
+			'person'       => 'person_field_map',
+			'organization' => 'organization_field_map',
+			'deal'         => 'deal_field_map',
+		);
+
+		foreach ( $sections as $section_object => $meta_key ) {
+			if ( $section_object === $object ) {
+				continue;
+			}
+			$map = rgars( $feed, 'meta/' . $meta_key );
+			if ( is_array( $map ) ) {
+				foreach ( $map as $value ) {
+					if ( ! empty( $value ) ) {
+						$unused[] = $section_object;
+						break;
+					}
+				}
+			}
+		}
+
+		if ( ! empty( $unused ) ) {
+			$this->log_debug( sprintf(
+				'%s(): Warning — this feed has mappings in the following sections that do not match the chosen object (%s) and will be ignored: %s.',
+				__METHOD__,
+				$object,
+				implode( ', ', $unused )
+			) );
+		}
+	}
+
 	private function process_person_feed( $feed, $entry, $form, $api_key ) {
 
 		$field_map = $this->get_field_map_fields( $feed, 'person_field_map' );
@@ -328,9 +300,6 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		return $entry;
 	}
 
-	/**
-	 * Process an Organization feed.
-	 */
 	private function process_organization_feed( $feed, $entry, $form, $api_key ) {
 
 		$field_map = $this->get_field_map_fields( $feed, 'organization_field_map' );
@@ -349,26 +318,18 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		return $entry;
 	}
 
-	/**
-	 * Process a Deal feed.
-	 *
-	 * Deal must link to at least one of Person or Organization. If neither
-	 * link can be established, the Deal is skipped with a clear error.
-	 */
 	private function process_deal_feed( $feed, $entry, $form, $api_key ) {
 
-		$deal_map = $this->get_field_map_fields( $feed, 'deal_field_map' );
-		$link_map = $this->get_field_map_fields( $feed, 'deal_link_field_map' );
+		$field_map = $this->get_field_map_fields( $feed, 'deal_field_map' );
 
-		$title = $this->get_mapped_value( $deal_map, 'deal_title', $entry, $form );
-
-		$person_name  = $this->get_mapped_value( $link_map, 'person_name', $entry, $form );
-		$person_email = $this->get_mapped_value( $link_map, 'person_email', $entry, $form );
-		$person_phone = $this->get_mapped_value( $link_map, 'person_phone', $entry, $form );
-		$org_name     = $this->get_mapped_value( $link_map, 'organization_name', $entry, $form );
+		$title        = $this->get_mapped_value( $field_map, 'deal_title', $entry, $form );
+		$person_name  = $this->get_mapped_value( $field_map, 'person_name', $entry, $form );
+		$person_email = $this->get_mapped_value( $field_map, 'person_email', $entry, $form );
+		$person_phone = $this->get_mapped_value( $field_map, 'person_phone', $entry, $form );
+		$org_name     = $this->get_mapped_value( $field_map, 'organization_name', $entry, $form );
 
 		$this->log_debug( sprintf(
-			'%s(): Deal values — title: "%s". Links — person_name: "%s", person_email: "%s", org_name: "%s"',
+			'%s(): Deal values — title: "%s", person_name: "%s", person_email: "%s", org_name: "%s"',
 			__METHOD__,
 			$title,
 			$person_name,
@@ -410,9 +371,6 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		return 'https://api.pipedrive.com/v1/';
 	}
 
-	/**
-	 * Resolve a mapped form field to its entry value.
-	 */
 	private function get_mapped_value( $field_map, $key, $entry, $form ) {
 		$field_id = rgar( (array) $field_map, $key );
 		if ( empty( $field_id ) ) {
@@ -421,9 +379,6 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		return (string) $this->get_field_value( $form, $entry, $field_id );
 	}
 
-	/**
-	 * Make a JSON request to Pipedrive. Returns the decoded `data` node, or null.
-	 */
 	private function pipedrive_request( $method, $url, $body = array() ) {
 
 		$args = array(
@@ -460,19 +415,6 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		return isset( $data['data'] ) ? $data['data'] : null;
 	}
 
-	/**
-	 * Find an organization by exact name, or create one. Returns the org ID.
-	 *
-	 * If an address is supplied and the organization already exists, the
-	 * existing record is updated with the address. If the organization does
-	 * not exist, it is created with both name and address.
-	 *
-	 * @param string      $name    Organization name (required).
-	 * @param string      $api_key Pipedrive API token.
-	 * @param string|null $address Optional address to set on the org.
-	 *
-	 * @return int|null Org ID on success, null on failure.
-	 */
 	private function upsert_organization( $name, $api_key, $address = '' ) {
 
 		$search_url = add_query_arg(
@@ -490,7 +432,6 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 			$org_id = (int) $search['items'][0]['item']['id'];
 			$this->log_debug( __METHOD__ . '(): Matched existing organization ID ' . $org_id );
 
-			// If an address was supplied, update the existing org.
 			if ( ! empty( $address ) ) {
 				$update_url = add_query_arg( array( 'api_token' => $api_key ), $this->api_base() . 'organizations/' . $org_id );
 				$this->pipedrive_request( 'PUT', $update_url, array( 'address' => $address ) );
@@ -516,9 +457,6 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		return null;
 	}
 
-	/**
-	 * Find a person by email (exact match), or create one.
-	 */
 	private function upsert_person( $name, $email, $phone, $org_id, $api_key ) {
 
 		$body = array();
@@ -572,9 +510,6 @@ class GFPipedriveAddOn extends GFFeedAddOn {
 		return null;
 	}
 
-	/**
-	 * Create a new deal.
-	 */
 	private function create_deal( $title, $person_id, $org_id, $api_key ) {
 
 		$body = array( 'title' => $title );
