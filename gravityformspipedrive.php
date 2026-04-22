@@ -1,8 +1,8 @@
 <?php
 /*
 Plugin Name: Gravity Forms Pipedrive Add-On
-Description: Integrates Gravity Forms with Pipedrive CRM, allowing you to send form entries to Pipedrive as Persons, Organizations, and Deals.
-Version: 1.0.1
+Description: Integrates Gravity Forms with Pipedrive CRM, allowing you to send form entries to Pipedrive as Persons, Organizations, or Deals.
+Version: 2.0.0
 Author: Megan Jones
 Text Domain: gravityformspipedrive
 */
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GF_PIPEDRIVE_VERSION', '1.0.1' );
+define( 'GF_PIPEDRIVE_VERSION', '2.0.0' );
 
 // Load the add-on once Gravity Forms is ready.
 add_action( 'gform_loaded', array( 'GF_Pipedrive_Bootstrap', 'load' ), 5 );
